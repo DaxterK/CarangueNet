@@ -60,590 +60,608 @@
       #desktop { overflow-y:auto; }
     }
     @media (max-width: 480px) {
-      .icon { top:initial; left:initial; position:relative; display:inline-block; margin:10px; width:40px; }
+      .icon { top:initial; left:initial; position:relative; display:inline-block; margin:5px; width:40px; }
       .icon .emoji { font-size:25px; }
-      #desktop { display:flex; flex-direction:column; align-items:center; padding:10px; }
-      .window { width:95vw; height:70vh; top:10vh; left:2.5vw; position:fixed; }
+      #desktop { display:flex; flex-direction:column; align-items:center; padding:5px; }
+      .window { width:90vw; height:70vh; top:10vh; left:5vw; position:fixed; }
       #taskbar { flex-wrap:wrap; height:auto; padding:5px; justify-content:center; }
       #welcomeScreen { padding:10px; }
-      #welcomeScreen input, #welcomeScreen button { width:100%; box-sizing:border-box; }
+      #welcomeScreen input, #welcomeScreen button { width:100%; box-sizing:border-box; font-size:16px; }
       #chatInputContainer input { width:60%; }
       #radioCover { height:80px; font-size:25px; }
     }
   </style>
   <!-- Firebase SDKs -->
   <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, arrayUnion } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, updateDoc, arrayUnion } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
   </script>
 </head>
 <body>
-  <!-- Pantalla de bienvenida -->
-  <div id="welcomeScreen">
-    <h1>Bienvenido a Carangueju FakeNet</h1>
-    <div>
-      <h3>Visitante</h3>
-      <input type="text" id="visitorName" placeholder="Nombre visitante">
-      <button onclick="enterAsVisitor()">Entrar como visitante</button>
-    </div>
-    <div>
-      <h3>Usuario registrado</h3>
-      <input type="text" id="userName" placeholder="Usuario">
-      <input type="password" id="userPass" placeholder="Contraseña">
-      <button onclick="loginUser()">Entrar / Registrar</button>
-    </div>
-    <div id="welcomeToast"></div>
+
+<!-- Pantalla de bienvenida -->
+<div id="welcomeScreen">
+  <h1>Bienvenido a Carangueju FakeNet</h1>
+  <div>
+    <h3>Visitante</h3>
+    <input type="text" id="visitorName" placeholder="Nombre visitante">
+    <button onclick="enterAsVisitor()">Entrar como visitante</button>
+  </div>
+  <div>
+    <h3>Usuario registrado</h3>
+    <input type="text" id="userName" placeholder="Usuario">
+    <input type="password" id="userPass" placeholder="Contraseña">
+    <button onclick="loginUser()">Entrar / Registrar</button>
+  </div>
+  <div id="welcomeToast"></div>
+</div>
+
+<!-- Escritorio -->
+<div id="desktop">
+
+  <!-- Iconos -->
+  <div class="icon" style="top:20px; left:20px;" onclick="openWindow('explorer')">
+    <span class="emoji">🗂️</span>
+    <div>Explorer</div>
+  </div>
+  <div class="icon" id="chatIcon" style="top:100px; left:20px;" onclick="openWindow('chat')">
+    <span class="emoji">💬</span>
+    <div>ChatCarangueju</div>
+    <div class="badge" id="chatBadge" style="display:none;">0</div>
+  </div>
+  <div class="icon" style="top:180px; left:20px;" onclick="openWindow('radio')">
+    <span class="emoji">📻</span>
+    <div>RadioCarangueju</div>
   </div>
 
-  <!-- Escritorio -->
-  <div id="desktop">
-    <!-- Iconos -->
-    <div class="icon" style="top:20px; left:20px;" onclick="openWindow('explorer')">
-      <span class="emoji">🌐</span>
-      <div>Navegou</div>
-    </div>
-    <div class="icon" id="chatIcon" style="top:100px; left:20px;" onclick="openWindow('chat')">
-      <span class="emoji">💬</span>
-      <div>FalaAI</div>
-      <div class="badge" id="chatBadge" style="display:none;">0</div>
-    </div>
-    <div class="icon" style="top:180px; left:20px;" onclick="openWindow('radio')">
-      <span class="emoji">📻</span>
-      <div>QuaseFM</div>
-    </div>
+  <!-- Barra de tareas -->
+  <div id="taskbar"></div>
 
-    <!-- Barra de tareas -->
-    <div id="taskbar"></div>
-
-    <!-- Explorer -->
-    <div class="window" id="explorer">
-      <div class="window-header">
-        <span>Explorer</span>
-        <div>
-          <button onclick="minimizeWindow('explorer')">_</button>
-          <button onclick="toggleMaximize('explorer')">□</button>
-          <button onclick="closeWindow('explorer')">X</button>
-        </div>
-      </div>
-      <div class="window-body" id="explorerContent">
-        <div id="postsList"></div>
-        <div class="comment-input">
-          <input type="text" id="newPostTitle" placeholder="Título de la publicación">
-          <input type="text" id="newPostContent" placeholder="Contenido">
-          <button onclick="addPost()">Agregar Post</button>
-        </div>
+  <!-- Explorer -->
+  <div class="window" id="explorer">
+    <div class="window-header">
+      <span>Explorer</span>
+      <div>
+        <button onclick="minimizeWindow('explorer')">_</button>
+        <button onclick="toggleMaximize('explorer')">□</button>
+        <button onclick="closeWindow('explorer')">X</button>
       </div>
     </div>
-
-    <!-- Chat -->
-    <div class="window" id="chat">
-      <div class="window-header">
-        <span>ChatCarangueju</span>
-        <div>
-          <button onclick="minimizeWindow('chat')">_</button>
-          <button onclick="toggleMaximize('chat')">□</button>
-          <button onclick="closeWindow('chat')">X</button>
-        </div>
-      </div>
-      <div class="window-body">
-        <div id="chatContent"></div>
-        <div id="chatInputContainer">
-          <input type="text" id="chatInput" placeholder="Escribe un mensaje" style="width:70%;"><button onclick="sendChat()">Enviar</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- RadioCarangueju -->
-    <div class="window" id="radio">
-      <div class="window-header">
-        <span>RadioCarangueju</span>
-        <div>
-          <button onclick="minimizeWindow('radio')">_</button>
-          <button onclick="toggleMaximize('radio')">□</button>
-          <button onclick="closeWindow('radio')">X</button>
-        </div>
-      </div>
-      <div class="window-body">
-        <div id="radioCover">🎵</div>
-        <div id="radioNowPlaying">Nada aún</div>
-        <div id="radioControls">
-          <button onclick="prevTrack()">⏮️</button>
-          <button onclick="togglePlay()">⏯️</button>
-          <button onclick="nextTrack()">⏭️</button>
-        </div>
-        <ul id="radioPlaylist"></ul>
+    <div class="window-body" id="explorerContent">
+      <div id="postsList"></div>
+      <div class="comment-input">
+        <input type="text" id="newPostTitle" placeholder="Título de la publicación">
+        <input type="text" id="newPostContent" placeholder="Contenido">
+        <button onclick="addPost()">Agregar Post</button>
       </div>
     </div>
   </div>
 
-  <script>
-    let currentUser = '';
-    let unreadMessages = 0;
-    let zIndexCounter = 100;
-    let windowStates = { 
-      explorer: { width: 500, height: 400, left: 50, top: 50 },
-      chat: { width: 350, height: 400, left: 50, top: 50 },
-      radio: { width: 300, height: 450, left: 50, top: 50 }
-    };
-    let chatSimulationInterval;
+  <!-- Chat -->
+  <div class="window" id="chat">
+    <div class="window-header">
+      <span>ChatCarangueju</span>
+      <div>
+        <button onclick="minimizeWindow('chat')">_</button>
+        <button onclick="toggleMaximize('chat')">□</button>
+        <button onclick="closeWindow('chat')">X</button>
+      </div>
+    </div>
+    <div class="window-body">
+      <div id="chatContent"></div>
+      <div id="chatInputContainer">
+        <input type="text" id="chatInput" placeholder="Escribe un mensaje" style="width:70%;"><button onclick="sendChat()">Enviar</button>
+      </div>
+    </div>
+  </div>
 
-    const firebaseConfig = {
-      // Reemplaza con tu config de Firebase
-      apiKey: "TU_API_KEY",
-      authDomain: "TU_PROJECT.firebaseapp.com",
-      projectId: "TU_PROJECT",
-      storageBucket: "TU_PROJECT.appspot.com",
-      messagingSenderId: "TU_SENDER_ID",
-      appId: "TU_APP_ID"
-    };
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  <!-- RadioCarangueju -->
+  <div class="window" id="radio">
+    <div class="window-header">
+      <span>RadioCarangueju</span>
+      <div>
+        <button onclick="minimizeWindow('radio')">_</button>
+        <button onclick="toggleMaximize('radio')">□</button>
+        <button onclick="closeWindow('radio')">X</button>
+      </div>
+    </div>
+    <div class="window-body">
+      <div id="radioCover">🎵</div>
+      <div id="radioNowPlaying">Nada aún</div>
+      <div id="radioControls">
+        <button onclick="prevTrack()">⏮️</button>
+        <button onclick="togglePlay()">⏯️</button>
+        <button onclick="nextTrack()">⏭️</button>
+      </div>
+      <ul id="radioPlaylist"></ul>
+    </div>
+  </div>
 
-    let chatMessages = [];
-    let postsData = [];
+</div>
 
-    // --- Bienvenida ---
-    function showWelcomeToast(msg) {
-      const container = document.getElementById('welcomeToast');
-      const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.textContent = msg;
-      container.appendChild(toast);
-      setTimeout(() => toast.remove(), 2000);
-    }
-    function enterAsVisitor() {
-      const name = document.getElementById('visitorName').value.trim();
-      if (!name) { showWelcomeToast('Ingresa un nombre'); return; }
-      currentUser = name + ' (Visitante)';
+<script>
+let currentUser = '';
+let unreadMessages = 0;
+let zIndexCounter = 100;
+let windowStates = { 
+  explorer: { width: 500, height: 400, left: 50, top: 50 },
+  chat: { width: 350, height: 400, left: 50, top: 50 },
+  radio: { width: 300, height: 450, left: 50, top: 50 }
+};
+let chatSimulationInterval;
+
+const firebaseConfig = {
+  // Reemplaza con tu config de Firebase
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_PROJECT.firebaseapp.com",
+  projectId: "TU_PROJECT",
+  storageBucket: "TU_PROJECT.appspot.com",
+  messagingSenderId: "TU_SENDER_ID",
+  appId: "TU_APP_ID"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let chatMessages = [];
+let postsData = [];
+
+// --- Bienvenida ---
+function showWelcomeToast(msg) {
+  const container = document.getElementById('welcomeToast');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
+}
+function enterAsVisitor() {
+  const name = document.getElementById('visitorName').value.trim();
+  if (!name) { showWelcomeToast('Ingresa un nombre'); return; }
+  currentUser = name + ' (Visitante)';
+  startDesktop();
+}
+function loginUser() {
+  const name = document.getElementById('userName').value.trim();
+  const pass = document.getElementById('userPass').value.trim();
+  if (!name || !pass) { showWelcomeToast('Usuario y contraseña requeridos'); return; }
+  const email = name + '@carangueju.fake';
+  signInWithEmailAndPassword(auth, email, pass)
+    .then((userCredential) => {
+      currentUser = name;
       startDesktop();
-    }
-    function loginUser() {
-      const name = document.getElementById('userName').value.trim();
-      const pass = document.getElementById('userPass').value.trim();
-      if (!name || !pass) { showWelcomeToast('Usuario y contraseña requeridos'); return; }
-      const email = name + '@carangueju.fake';
-      signInWithEmailAndPassword(auth, email, pass)
-        .then((userCredential) => {
-          currentUser = name;
-          startDesktop();
-        })
-        .catch((error) => {
-          if (error.code === 'auth/user-not-found') {
-            createUserWithEmailAndPassword(auth, email, pass)
-              .then(() => {
-                currentUser = name;
-                startDesktop();
-              })
-              .catch(() => showWelcomeToast('Error al registrar'));
-          } else {
-            showWelcomeToast('Error: ' + error.message);
-          }
-        });
-    }
-
-    // --- Cerrar sesión ---
-    function logout() {
-      signOut(auth).then(() => {
-        currentUser = '';
-        unreadMessages = 0;
-        chatMessages = [];
-        document.getElementById('desktop').style.display = 'none';
-        document.getElementById('welcomeScreen').style.display = 'flex';
-        document.getElementById('taskbar').innerHTML = '';
-        document.querySelectorAll('.window').forEach(w => {
-          w.style.display = 'none';
-          w.classList.remove('maximized', 'opening', 'minimizing', 'closing');
-          windowStates[w.id] = { width: w.id === 'explorer' ? 500 : w.id === 'chat' ? 350 : 300, height: w.id === 'explorer' ? 400 : w.id === 'chat' ? 400 : 450, left: 50, top: 50 };
-        });
-        if (chatSimulationInterval) clearInterval(chatSimulationInterval);
-      }).catch((error) => {
-        showWelcomeToast('Error al cerrar sesión: ' + error.message);
-      });
-    }
-
-    // --- Escritorio ---
-    function startDesktop() {
-      document.getElementById('welcomeScreen').style.display = 'none';
-      document.getElementById('desktop').style.display = 'block';
-      loadPosts();
-      loadChat();
-      loadRadio();
-      initTaskbar();
-      initDraggableWindows();
-      startClock();
-    }
-
-    // --- Reloj ---
-    function startClock() {
-      function updateClock() {
-        const now = new Date();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
-        const date = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const year = now.getFullYear();
-        const clock = document.getElementById('clock');
-        if (clock) {
-          clock.textContent = `${hours}:${minutes}:${seconds} ${date}/${month}/${year}`;
-        }
-      }
-      updateClock();
-      setInterval(updateClock, 1000);
-    }
-
-    // --- Chat ---
-    function isChatActive() {
-      const chatWindow = document.getElementById('chat');
-      if (chatWindow.style.display !== 'block') return false;
-      const currentZIndex = parseInt(chatWindow.style.zIndex) || 0;
-      const windows = document.querySelectorAll('.window');
-      for (let win of windows) {
-        if (win !== chatWindow && win.style.display === 'block') {
-          const winZIndex = parseInt(win.style.zIndex) || 0;
-          if (winZIndex > currentZIndex) return false;
-        }
-      }
-      return true;
-    }
-
-    function loadChat() {
-      const q = query(collection(db, 'chatMessages'), orderBy('timestamp'));
-      onSnapshot(q, (snapshot) => {
-        chatMessages = snapshot.docs.map(doc => doc.data().text);
-        if (isChatActive()) renderChat();
-        else {
-          unreadMessages++;
-          updateChatBadge();
-        }
-      });
-    }
-
-    function renderChat() {
-      const container = document.getElementById('chatContent');
-      container.innerHTML = '';
-      chatMessages.forEach(m => {
-        const p = document.createElement('div');
-        p.textContent = m;
-        if (m.startsWith(currentUser + ':')) {
-          p.style.textAlign = 'right';
-          p.style.background = '#e0f0ff';
-        }
-        p.style.padding = '5px';
-        p.style.margin = '2px';
-        p.style.borderRadius = '5px';
-        container.appendChild(p);
-      });
-      container.scrollTop = container.scrollHeight;
-    }
-
-    function sendChat() {
-      const input = document.getElementById('chatInput');
-      const msg = input.value.trim();
-      if (!msg) return;
-      if (!currentUser) { showWelcomeToast('Debes registrarte'); return; }
-      addDoc(collection(db, 'chatMessages'), {
-        text: currentUser + ': ' + msg,
-        timestamp: serverTimestamp()
-      });
-      input.value = '';
-    }
-
-    function updateChatBadge() {
-      const badge = document.getElementById('chatBadge');
-      if (unreadMessages > 0) {
-        badge.style.display = 'flex';
-        badge.textContent = unreadMessages;
+    })
+    .catch((error) => {
+      if (error.code === 'auth/user-not-found') {
+        createUserWithEmailAndPassword(auth, email, pass)
+          .then(() => {
+            currentUser = name;
+            startDesktop();
+          })
+          .catch(() => showWelcomeToast('Error al registrar'));
       } else {
-        badge.style.display = 'none';
+        showWelcomeToast('Error: ' + error.message);
       }
+    });
+}
+
+// --- Cerrar sesión ---
+function logout() {
+  signOut(auth).then(() => {
+    currentUser = '';
+    unreadMessages = 0;
+    chatMessages = [];
+    document.getElementById('desktop').style.display = 'none';
+    document.getElementById('welcomeScreen').style.display = 'flex';
+    document.getElementById('taskbar').innerHTML = '';
+    document.querySelectorAll('.window').forEach(w => {
+      w.style.display = 'none';
+      w.classList.remove('maximized', 'opening', 'minimizing', 'closing');
+      windowStates[w.id] = { width: w.id === 'explorer' ? 500 : w.id === 'chat' ? 350 : 300, height: w.id === 'explorer' ? 400 : w.id === 'chat' ? 400 : 450, left: 50, top: 50 };
+    });
+    if (chatSimulationInterval) clearInterval(chatSimulationInterval);
+  }).catch((error) => {
+    showWelcomeToast('Error al cerrar sesión: ' + error.message);
+  });
+}
+
+// --- Escritorio ---
+function startDesktop() {
+  document.getElementById('welcomeScreen').style.display = 'none';
+  document.getElementById('desktop').style.display = 'block';
+  loadPosts();
+  loadChat();
+  loadRadio();
+  initTaskbar();
+  initDraggableWindows();
+  startClock();
+}
+
+// --- Reloj ---
+function startClock() {
+  function updateClock() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const date = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    const clock = document.getElementById('clock');
+    if (clock) {
+      clock.textContent = `${hours}:${minutes}:${seconds} ${date}/${month}/${year}`;
     }
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+}
 
-    // --- Posts ---
-    function loadPosts() {
-      const q = query(collection(db, 'posts'), orderBy('timestamp', 'desc'));
-      onSnapshot(q, (snapshot) => {
-        postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        const container = document.getElementById('postsList');
-        container.innerHTML = '';
-        postsData.forEach(post => {
-          const card = document.createElement('div');
-          card.className = 'card';
-          card.innerHTML = `
-            <div class="title">${post.title}</div>
-            <div class="content">${post.content}</div>
-            <button onclick="likePost('${post.id}')">👍</button> <span class="likes-list">${post.likes ? post.likes.join(', ') : ''}</span>
-            <div class="comments-list">${post.comments ? post.comments.join('<br>') : ''}</div>
-            <div class="comment-input">
-              <input type="text" placeholder="Escribe un comentario">
-              <button onclick="addComment('${post.id}', this)">💬</button>
-            </div>
-          `;
-          container.appendChild(card);
-        });
-      });
+// --- Simulación de chat ---
+function isChatActive() {
+  const chatWindow = document.getElementById('chat');
+  if (chatWindow.style.display !== 'block') return false;
+  const currentZIndex = parseInt(chatWindow.style.zIndex) || 0;
+  const windows = document.querySelectorAll('.window');
+  for (let win of windows) {
+    if (win !== chatWindow && win.style.display === 'block') {
+      const winZIndex = parseInt(win.style.zIndex) || 0;
+      if (winZIndex > currentZIndex) return false;
     }
+  }
+  return true;
+}
 
-    function likePost(postId) {
-      if (!currentUser) { showWelcomeToast('Debes registrarte'); return; }
-      const postRef = doc(db, 'posts', postId);
-      updateDoc(postRef, {
-        likes: arrayUnion(currentUser)
-      });
-    }
-
-    function addComment(postId, btn) {
-      if (!currentUser) { showWelcomeToast('Debes registrarte'); return; }
-      const input = btn.previousElementSibling;
-      const text = input.value.trim();
-      if (!text) return;
-      const postRef = doc(db, 'posts', postId);
-      updateDoc(postRef, {
-        comments: arrayUnion(currentUser + ': ' + text)
-      });
-      input.value = '';
-    }
-
-    function addPost() {
-      const title = document.getElementById('newPostTitle').value.trim();
-      const content = document.getElementById('newPostContent').value.trim();
-      if (!title || !content || !currentUser) return;
-      addDoc(collection(db, 'posts'), {
-        title: title,
-        content: content,
-        likes: [],
-        comments: [],
-        timestamp: serverTimestamp()
-      });
-    }
-
-    // --- Radio ---
-    let radioPlaylist = ["Aline en la playa", "Carnaval de Carangueju", "Noche de estrellas", "Fiesta de cangrejos", "Brisa de la bahía", "Olas del mar", "Canto de sirenas", "Ritmo tropical", "Atardecer en Carangueju", "Baile de cangrejos"];
-    let currentTrack = 0;
-    let isPlaying = false;
-
-    function loadRadio() {
-      const ul = document.getElementById('radioPlaylist');
-      ul.innerHTML = '';
-      radioPlaylist.forEach((track, index) => {
-        const li = document.createElement('li');
-        li.textContent = track;
-        li.onclick = () => {
-          currentTrack = index;
-          updateRadioNowPlaying();
-          if (isPlaying) togglePlay();
-          togglePlay();
-        };
-        ul.appendChild(li);
-      });
-      updateRadioNowPlaying();
-    }
-
-    function togglePlay() {
-      isPlaying = !isPlaying;
-      showWelcomeToast(isPlaying ? '▶️ Reproduciendo' : '⏸️ Pausado');
-    }
-
-    function nextTrack() {
-      currentTrack = (currentTrack + 1) % radioPlaylist.length;
-      updateRadioNowPlaying();
-    }
-
-    function prevTrack() {
-      currentTrack = (currentTrack - 1 + radioPlaylist.length) % radioPlaylist.length;
-      updateRadioNowPlaying();
-    }
-
-    function updateRadioNowPlaying() {
-      document.getElementById('radioNowPlaying').textContent = '🎵 ' + radioPlaylist[currentTrack];
-    }
-
-    // --- Ventanas ---
-    function openWindow(id) {
-      const window = document.getElementById(id);
-      window.classList.remove('closing', 'minimizing');
-      window.classList.add('opening');
-      window.style.display = 'block';
-      
-      if (!window.classList.contains('maximized')) {
-        window.style.width = windowStates[id].width + 'px';
-        window.style.height = windowStates[id].height + 'px';
-        window.style.left = windowStates[id].left + 'px';
-        window.style.top = windowStates[id].top + 'px';
-      }
-      
-      bringToFront(window);
-      
-      if (!document.querySelector(`.task-icon[data-window="${id}"]`)) {
-        addToTaskbar(id, window.querySelector('.window-header span').textContent);
-      }
-      
-      if (id === 'chat') {
-        unreadMessages = 0;
-        updateChatBadge();
+function startChatSimulation() {
+  if (chatSimulationInterval) clearInterval(chatSimulationInterval);
+  chatSimulationInterval = setInterval(() => {
+    if (messageIndex < predeterminedMessages.length) {
+      const msg = predeterminedMessages[messageIndex];
+      chatMessages.push(msg);
+      messageIndex++;
+      if (isChatActive()) {
         renderChat();
-      }
-      setTimeout(() => window.classList.remove('opening'), 300);
-    }
-
-    function closeWindow(id) {
-      const window = document.getElementById(id);
-      window.classList.add('closing');
-      setTimeout(() => {
-        window.style.display = 'none';
-        window.classList.remove('maximized', 'closing');
-        windowStates[id] = { width: id === 'explorer' ? 500 : id === 'chat' ? 350 : 300, height: id === 'explorer' ? 400 : id === 'chat' ? 400 : 450, left: 50, top: 50 };
-        const taskIcon = document.querySelector(`.task-icon[data-window="${id}"]`);
-        if (taskIcon) taskIcon.remove();
-      }, 300);
-    }
-
-    function minimizeWindow(id) {
-      const window = document.getElementById(id);
-      window.classList.add('minimizing');
-      setTimeout(() => {
-        window.style.display = 'none';
-        window.classList.remove('minimizing');
-        if (!document.querySelector(`.task-icon[data-window="${id}"]`)) {
-          addToTaskbar(id, window.querySelector('.window-header span').textContent);
-        }
-      }, 300);
-    }
-
-    function toggleMaximize(id) {
-      const window = document.getElementById(id);
-      if (window.classList.contains('maximized')) {
-        window.classList.remove('maximized');
-        window.style.width = windowStates[id].width + 'px';
-        window.style.height = windowStates[id].height + 'px';
-        window.style.left = windowStates[id].left + 'px';
-        window.style.top = windowStates[id].top + 'px';
-        window.style.resize = 'both';
       } else {
-        windowStates[id] = {
-          width: window.offsetWidth || (id === 'explorer' ? 500 : id === 'chat' ? 350 : 300),
-          height: window.offsetHeight || (id === 'explorer' ? 400 : id === 'chat' ? 400 : 450),
-          left: parseInt(window.style.left) || 50,
-          top: parseInt(window.style.top) || 50
-        };
-        window.classList.add('maximized');
-        window.style.resize = 'none';
+        unreadMessages++;
+        updateChatBadge();
       }
+    } else {
+      clearInterval(chatSimulationInterval);
+    }
+  }, 5000);
+}
+
+// --- Ventanas ---
+function openWindow(id) {
+  const window = document.getElementById(id);
+  window.classList.remove('closing', 'minimizing');
+  window.classList.add('opening');
+  window.style.display = 'block';
+  
+  if (!window.classList.contains('maximized')) {
+    const desktop = document.getElementById('desktop');
+    const windowWidth = windowStates[id].width;
+    const windowHeight = windowStates[id].height;
+    windowStates[id].left = (desktop.clientWidth - windowWidth) / 2;
+    windowStates[id].top = (desktop.clientHeight - windowHeight) / 2;
+    window.style.width = windowWidth + 'px';
+    window.style.height = windowHeight + 'px';
+    window.style.left = windowStates[id].left + 'px';
+    window.style.top = windowStates[id].top + 'px';
+  }
+  
+  bringToFront(window);
+  
+  if (!document.querySelector(`.task-icon[data-window="${id}"]`)) {
+    addToTaskbar(id, window.querySelector('.window-header span').textContent);
+  }
+  
+  if (id === 'chat') {
+    unreadMessages = 0;
+    updateChatBadge();
+    renderChat();
+  }
+  setTimeout(() => window.classList.remove('opening'), 300);
+}
+
+function closeWindow(id) {
+  const window = document.getElementById(id);
+  window.classList.add('closing');
+  setTimeout(() => {
+    window.style.display = 'none';
+    window.classList.remove('maximized', 'closing');
+    windowStates[id] = { width: id === 'explorer' ? 500 : id === 'chat' ? 350 : 300, height: id === 'explorer' ? 400 : id === 'chat' ? 400 : 450, left: 50, top: 50 };
+    const taskIcon = document.querySelector(`.task-icon[data-window="${id}"]`);
+    if (taskIcon) taskIcon.remove();
+  }, 300);
+}
+
+function minimizeWindow(id) {
+  const window = document.getElementById(id);
+  window.classList.add('minimizing');
+  setTimeout(() => {
+    window.style.display = 'none';
+    window.classList.remove('minimizing');
+    if (!document.querySelector(`.task-icon[data-window="${id}"]`)) {
+      addToTaskbar(id, window.querySelector('.window-header span').textContent);
+    }
+  }, 300);
+}
+
+function toggleMaximize(id) {
+  const window = document.getElementById(id);
+  if (window.classList.contains('maximized')) {
+    window.classList.remove('maximized');
+    window.style.width = windowStates[id].width + 'px';
+    window.style.height = windowStates[id].height + 'px';
+    window.style.left = windowStates[id].left + 'px';
+    window.style.top = windowStates[id].top + 'px';
+    window.style.resize = 'both';
+  } else {
+    windowStates[id] = {
+      width: window.offsetWidth || (id === 'explorer' ? 500 : id === 'chat' ? 350 : 300),
+      height: window.offsetHeight || (id === 'explorer' ? 400 : id === 'chat' ? 400 : 450),
+      left: parseInt(window.style.left) || 50,
+      top: parseInt(window.style.top) || 50
+    };
+    window.classList.add('maximized');
+    window.style.resize = 'none';
+  }
+  bringToFront(window);
+}
+
+function bringToFront(window) {
+  zIndexCounter++;
+  window.style.zIndex = zIndexCounter;
+  document.querySelectorAll('.task-icon').forEach(icon => icon.classList.remove('active'));
+  const taskIcon = document.querySelector(`.task-icon[data-window="${window.id}"]`);
+  if (taskIcon) taskIcon.classList.add('active');
+  if (window.id === 'chat') {
+    unreadMessages = 0;
+    updateChatBadge();
+    renderChat();
+  }
+}
+
+// --- Barra de tareas ---
+function initTaskbar() {
+  const taskbar = document.getElementById('taskbar');
+  taskbar.innerHTML = '';
+  
+  const logoutButton = document.createElement('button');
+  logoutButton.textContent = 'Cerrar sesión';
+  logoutButton.style.marginLeft = 'auto';
+  logoutButton.style.background = '#aaa';
+  logoutButton.style.color = '#000';
+  logoutButton.style.border = 'none';
+  logoutButton.style.padding = '5px 10px';
+  logoutButton.style.cursor = 'pointer';
+  logoutButton.style.borderRadius = '3px';
+  logoutButton.onclick = logout;
+  taskbar.appendChild(logoutButton);
+  
+  const userDisplay = document.createElement('div');
+  userDisplay.style.marginLeft = '10px';
+  userDisplay.style.color = '#fff';
+  userDisplay.textContent = currentUser;
+  taskbar.appendChild(userDisplay);
+  
+  const clock = document.createElement('div');
+  clock.id = 'clock';
+  taskbar.appendChild(clock);
+}
+
+function addToTaskbar(id, title) {
+  const taskbar = document.getElementById('taskbar');
+  const taskIcon = document.createElement('div');
+  taskIcon.className = 'task-icon';
+  taskIcon.textContent = title;
+  taskIcon.dataset.window = id;
+  taskIcon.onclick = () => {
+    const window = document.getElementById(id);
+    if (window.style.display === 'none') {
+      openWindow(id);
+    } else {
       bringToFront(window);
     }
+  };
+  taskbar.insertBefore(taskIcon, taskbar.firstChild);
+  if (document.getElementById(id).style.display === 'block') {
+    taskIcon.classList.add('active');
+  }
+}
 
-    function bringToFront(window) {
-      zIndexCounter++;
-      window.style.zIndex = zIndexCounter;
-      document.querySelectorAll('.task-icon').forEach(icon => icon.classList.remove('active'));
-      const taskIcon = document.querySelector(`.task-icon[data-window="${window.id}"]`);
-      if (taskIcon) taskIcon.classList.add('active');
-      if (window.id === 'chat') {
-        unreadMessages = 0;
-        updateChatBadge();
-        renderChat();
-      }
-    }
+// --- Arrastrar ventanas ---
+function initDraggableWindows() {
+  document.querySelectorAll('.window').forEach(window => {
+    const header = window.querySelector('.window-header');
+    let isDragging = false, currentX, currentY, initialX, initialY;
 
-    // --- Barra de tareas ---
-    function initTaskbar() {
-      const taskbar = document.getElementById('taskbar');
-      taskbar.innerHTML = '';
-      
-      const logoutButton = document.createElement('button');
-      logoutButton.textContent = 'Cerrar sesión';
-      logoutButton.style.marginLeft = 'auto';
-      logoutButton.style.background = '#aaa';
-      logoutButton.style.color = '#000';
-      logoutButton.style.border = 'none';
-      logoutButton.style.padding = '5px 10px';
-      logoutButton.style.cursor = 'pointer';
-      logoutButton.style.borderRadius = '3px';
-      logoutButton.onclick = logout;
-      taskbar.appendChild(logoutButton);
-      
-      const userDisplay = document.createElement('div');
-      userDisplay.style.marginLeft = '10px';
-      userDisplay.style.color = '#fff';
-      userDisplay.textContent = currentUser;
-      taskbar.appendChild(userDisplay);
-      
-      const clock = document.createElement('div');
-      clock.id = 'clock';
-      taskbar.appendChild(clock);
-    }
-
-    function addToTaskbar(id, title) {
-      const taskbar = document.getElementById('taskbar');
-      const taskIcon = document.createElement('div');
-      taskIcon.className = 'task-icon';
-      taskIcon.textContent = title;
-      taskIcon.dataset.window = id;
-      taskIcon.onclick = () => {
-        const window = document.getElementById(id);
-        if (window.style.display === 'none') {
-          openWindow(id);
-        } else {
-          bringToFront(window);
-        }
-      };
-      taskbar.insertBefore(taskIcon, taskbar.firstChild);
-      if (document.getElementById(id).style.display === 'block') {
-        taskIcon.classList.add('active');
-      }
-    }
-
-    // --- Arrastrar ventanas ---
-    function initDraggableWindows() {
-      document.querySelectorAll('.window').forEach(window => {
-        const header = window.querySelector('.window-header');
-        let isDragging = false, currentX, currentY, initialX, initialY;
-
-        header.addEventListener('mousedown', (e) => {
-          if (window.classList.contains('maximized')) return;
-          initialX = e.clientX - currentX;
-          initialY = e.clientY - currentY;
-          isDragging = true;
-          bringToFront(window);
-        });
-
-        document.addEventListener('mousemove', (e) => {
-          if (isDragging) {
-            e.preventDefault();
-            currentX = e.clientX - initialX;
-            currentY = e.clientY - initialY;
-            window.style.left = currentX + 'px';
-            window.style.top = currentY + 'px';
-            constrainWindowPosition(window);
-          }
-        });
-
-        document.addEventListener('mouseup', () => {
-          isDragging = false;
-        });
-
-        currentX = parseInt(window.style.left) || 50;
-        currentY = parseInt(window.style.top) || 50;
-        window.style.left = currentX + 'px';
-        window.style.top = currentY + 'px';
-      });
-    }
-
-    function constrainWindowPosition(window) {
+    header.addEventListener('mousedown', (e) => {
       if (window.classList.contains('maximized')) return;
-      const desktop = document.getElementById('desktop');
-      const maxX = desktop.clientWidth - window.offsetWidth;
-      const maxY = desktop.clientHeight - window.offsetHeight - 30;
-      let x = parseInt(window.style.left) || 0;
-      let y = parseInt(window.style.top) || 0;
+      initialX = e.clientX - (parseInt(window.style.left) || 0);
+      initialY = e.clientY - (parseInt(window.style.top) || 0);
+      isDragging = true;
+      bringToFront(window);
+    });
 
-      x = Math.max(0, Math.min(x, maxX));
-      y = Math.max(0, Math.min(y, maxY));
-      window.style.left = x + 'px';
-      window.style.top = y + 'px';
+    document.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        e.preventDefault();
+        currentX = e.clientX - initialX;
+        currentY = e.clientY - initialY;
+        const desktop = document.getElementById('desktop');
+        const maxX = desktop.clientWidth - window.offsetWidth;
+        const maxY = desktop.clientHeight - window.offsetHeight - 30;
+        window.style.left = Math.max(0, Math.min(currentX, maxX)) + 'px';
+        window.style.top = Math.max(0, Math.min(currentY, maxY)) + 'px';
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+
+    // Inicializar posición si no está definida
+    if (!window.style.left || !window.style.top) {
+      window.style.left = '50px';
+      window.style.top = '50px';
     }
-  </script>
+  });
+}
+
+// --- Posts ---
+function loadPosts() {
+  const q = query(collection(db, 'posts'), orderBy('timestamp', 'desc'));
+  onSnapshot(q, (snapshot) => {
+    postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const container = document.getElementById('postsList');
+    container.innerHTML = '';
+    postsData.forEach(post => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="title">${post.title}</div>
+        <div class="content">${post.content}</div>
+        <button onclick="likePost('${post.id}')">👍</button> <span class="likes-list">${post.likes ? post.likes.join(', ') : ''}</span>
+        <div class="comments-list">${post.comments ? post.comments.join('<br>') : ''}</div>
+        <div class="comment-input">
+          <input type="text" placeholder="Escribe un comentario">
+          <button onclick="addComment('${post.id}', this)">💬</button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  });
+}
+
+function likePost(postId) {
+  if (!currentUser) { showWelcomeToast('Debes registrarte'); return; }
+  const postRef = doc(db, 'posts', postId);
+  updateDoc(postRef, {
+    likes: arrayUnion(currentUser)
+  });
+}
+
+function addComment(postId, btn) {
+  if (!currentUser) { showWelcomeToast('Debes registrarte'); return; }
+  const input = btn.previousElementSibling;
+  const text = input.value.trim();
+  if (!text) return;
+  const postRef = doc(db, 'posts', postId);
+  updateDoc(postRef, {
+    comments: arrayUnion(currentUser + ': ' + text)
+  });
+  input.value = '';
+}
+
+function addPost() {
+  const title = document.getElementById('newPostTitle').value.trim();
+  const content = document.getElementById('newPostContent').value.trim();
+  if (!title || !content || !currentUser) return;
+  addDoc(collection(db, 'posts'), {
+    title: title,
+    content: content,
+    likes: [],
+    comments: [],
+    timestamp: serverTimestamp()
+  });
+}
+
+// --- Chat ---
+function loadChat() {
+  const q = query(collection(db, 'chatMessages'), orderBy('timestamp'));
+  onSnapshot(q, (snapshot) => {
+    chatMessages = snapshot.docs.map(doc => doc.data().text);
+    if (isChatActive()) renderChat();
+    else {
+      unreadMessages++;
+      updateChatBadge();
+    }
+  });
+}
+
+function renderChat() {
+  const container = document.getElementById('chatContent');
+  container.innerHTML = '';
+  chatMessages.forEach(m => {
+    const p = document.createElement('div');
+    p.textContent = m;
+    if (m.startsWith(currentUser + ':')) {
+      p.style.textAlign = 'right';
+      p.style.background = '#e0f0ff';
+    }
+    p.style.padding = '5px';
+    p.style.margin = '2px';
+    p.style.borderRadius = '5px';
+    container.appendChild(p);
+  });
+  container.scrollTop = container.scrollHeight;
+}
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  if (!currentUser) { showWelcomeToast('Debes registrarte'); return; }
+  addDoc(collection(db, 'chatMessages'), {
+    text: currentUser + ': ' + msg,
+    timestamp: serverTimestamp()
+  });
+  input.value = '';
+}
+
+function updateChatBadge() {
+  const badge = document.getElementById('chatBadge');
+  if (unreadMessages > 0) {
+    badge.style.display = 'flex';
+    badge.textContent = unreadMessages;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// --- Radio ---
+let radioPlaylist = ["Aline en la playa", "Carnaval de Carangueju", "Noche de estrellas", "Fiesta de cangrejos", "Brisa de la bahía", "Olas del mar", "Canto de sirenas", "Ritmo tropical", "Atardecer en Carangueju", "Baile de cangrejos"];
+let currentTrack = 0;
+let isPlaying = false;
+
+function loadRadio() {
+  const ul = document.getElementById('radioPlaylist');
+  ul.innerHTML = '';
+  radioPlaylist.forEach((track, index) => {
+    const li = document.createElement('li');
+    li.textContent = track;
+    li.onclick = () => {
+      currentTrack = index;
+      updateRadioNowPlaying();
+      if (isPlaying) togglePlay();
+      togglePlay();
+    };
+    ul.appendChild(li);
+  });
+  updateRadioNowPlaying();
+}
+
+function togglePlay() {
+  isPlaying = !isPlaying;
+  showWelcomeToast(isPlaying ? '▶️ Reproduciendo' : '⏸️ Pausado');
+}
+
+function nextTrack() {
+  currentTrack = (currentTrack + 1) % radioPlaylist.length;
+  updateRadioNowPlaying();
+}
+
+function prevTrack() {
+  currentTrack = (currentTrack - 1 + radioPlaylist.length) % radioPlaylist.length;
+  updateRadioNowPlaying();
+}
+
+function updateRadioNowPlaying() {
+  document.getElementById('radioNowPlaying').textContent = '🎵 ' + radioPlaylist[currentTrack];
+}
+</script>
+
 </body>
 </html>
