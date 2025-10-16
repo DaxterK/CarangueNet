@@ -63,6 +63,7 @@
 
 <script>
 let currentUser = '';
+let isVisitor = false;
 
 const firebaseConfig = {
   // Reemplaza con tu config de Firebase
@@ -89,6 +90,7 @@ function enterAsVisitor() {
   const name = document.getElementById('visitorName').value.trim();
   if (!name) { showWelcomeToast('Ingresa un nombre'); return; }
   currentUser = name + ' (Visitante)';
+  isVisitor = true;
   startDesktop();
 }
 
@@ -100,6 +102,7 @@ function loginUser() {
   signInWithEmailAndPassword(auth, email, pass)
     .then((userCredential) => {
       currentUser = name;
+      isVisitor = false;
       startDesktop();
     })
     .catch((error) => {
@@ -107,6 +110,7 @@ function loginUser() {
         createUserWithEmailAndPassword(auth, email, pass)
           .then(() => {
             currentUser = name;
+            isVisitor = false;
             startDesktop();
           })
           .catch(() => showWelcomeToast('Error al registrar'));
@@ -118,35 +122,34 @@ function loginUser() {
 
 function confirmLogout(confirm) {
   const popup = document.getElementById('popup');
+  popup.style.display = 'none';
   if (confirm) {
     logout();
   }
-  popup.style.display = 'none';
 }
 
-// --- CAMBIO PRINCIPAL ---
 function logout() {
-  if (auth.currentUser) {
-    // Usuario de Firebase
+  if (isVisitor) {
+    // Para visitantes, solo volver a login
+    currentUser = '';
+    isVisitor = false;
+    document.getElementById('desktop').style.display = 'none';
+    document.getElementById('welcomeScreen').style.display = 'flex';
+    document.getElementById('taskbar').innerHTML = '';
+    showWelcomeToast('Sesión cerrada');
+  } else {
     signOut(auth).then(() => {
-      endSession();
+      currentUser = '';
+      isVisitor = false;
+      document.getElementById('desktop').style.display = 'none';
+      document.getElementById('welcomeScreen').style.display = 'flex';
+      document.getElementById('taskbar').innerHTML = '';
+      showWelcomeToast('Sesión cerrada');
     }).catch((error) => {
       showWelcomeToast('Error al cerrar sesión: ' + error.message);
     });
-  } else {
-    // Visitante o sin usuario
-    endSession();
   }
 }
-
-function endSession() {
-  currentUser = '';
-  document.getElementById('desktop').style.display = 'none';
-  document.getElementById('welcomeScreen').style.display = 'flex';
-  document.getElementById('taskbar').innerHTML = '';
-  showWelcomeToast('Sesión cerrada');
-}
-// --- FIN CAMBIO PRINCIPAL ---
 
 function startDesktop() {
   document.getElementById('welcomeScreen').style.display = 'none';
@@ -195,3 +198,28 @@ function startClock() {
 
 </body>
 </html>
+```
+
+---
+
+### Corrección del problema
+- **Para visitantes**: Añadí una variable `isVisitor` para diferenciar. Si es visitante, `logout()` simplemente limpia y vuelve a login sin llamar a `signOut(auth)`, ya que no hay sesión Firebase.
+- **Para usuarios registrados**: Usa `signOut(auth)` para cerrar la sesión real.
+- **Pop-up**: El botón "Sí" ahora llama a `confirmLogout(true)`, que oculta el pop-up y ejecuta `logout()`. El botón "No" solo oculta el pop-up.
+
+---
+
+### Instrucciones
+1. **Copia el código**: Selecciona todo, cópialo (Ctrl+C o Cmd+C).
+2. **Sube a GitHub**: Edita `index.html` en [github.com/tu-username/CaranguejuNet](https://github.com/tu-username/CaranguejuNet), pega el código, y haz commit con mensaje "Ajustar cierre de sesión para visitantes".
+3. **Espera el deploy**: Netlify actualizará en 1-2 minutos. Revisa [app.netlify.com](https://app.netlify.com) > Tu sitio > "Deploys".
+4. **Configura Firebase**: Asegúrate de reemplazar el `firebaseConfig` con tus credenciales.
+
+---
+
+### Prueba y retroalimentación
+- Inicia sesión como visitante (ej. "Juan") > Clic en "Cerrar sesión" > Clic en "Sí" > Verifica que vuelva a login.
+- Inicia sesión como usuario registrado > Clic en "Cerrar sesión" > Clic en "Sí" > Verifica que vuelva a login.
+- Si sigue sin funcionar, abre la consola (F12 > Console) y pásame el mensaje de error.
+
+Estoy aquí para asegurarme de que esto funcione. Por favor, prueba y dime si ahora el botón "Sí" cierra la sesión correctamente para visitantes y usuarios. 🚀
