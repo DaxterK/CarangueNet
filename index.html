@@ -15,12 +15,16 @@
     #userInfo button { padding:5px 10px; background:#aaa; border:none; cursor:pointer; border-radius:3px; }
     #clock { color:#fff; font-family:'Courier New', monospace; font-size:12px; margin-left:auto; }
     .toast { background:#f0d888; padding:5px; margin:5px 0; border:1px solid #ccc; border-radius:3px; font-size:12px; color:#000; animation: fadeout 2s forwards; }
+    #popup { display:none; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:#fff; padding:20px; border:2px solid #666; border-radius:5px; z-index:2000; box-shadow:0 0 10px rgba(0,0,0,0.5); }
+    #popup p { margin:0 0 15px 0; }
+    #popup button { padding:5px 10px; margin-right:10px; }
     @keyframes fadeout { 0%{opacity:1;} 90%{opacity:1;} 100%{opacity:0;} }
     @media (max-width: 480px) {
       #welcomeScreen { padding:10px; }
       #welcomeScreen input, #welcomeScreen button { width:100%; box-sizing:border-box; }
       #taskbar { height:40px; font-size:14px; padding:5px; }
       #userInfo button { padding:3px 8px; font-size:12px; }
+      #popup { width:80%; }
     }
   </style>
   <script type="module">
@@ -50,6 +54,11 @@
 <!-- Escritorio -->
 <div id="desktop">
   <div id="taskbar"></div>
+  <div id="popup">
+    <p>¿Estás seguro de que quieres cerrar sesión?</p>
+    <button onclick="confirmLogout(true)">Sí</button>
+    <button onclick="confirmLogout(false)">No</button>
+  </div>
 </div>
 
 <script>
@@ -81,7 +90,6 @@ function enterAsVisitor() {
   if (!name) { showWelcomeToast('Ingresa un nombre'); return; }
   currentUser = name + ' (Visitante)';
   startDesktop();
-  console.log('Entrando como visitante:', currentUser);
 }
 
 function loginUser() {
@@ -93,7 +101,6 @@ function loginUser() {
     .then((userCredential) => {
       currentUser = name;
       startDesktop();
-      console.log('Inicio de sesión exitoso:', currentUser);
     })
     .catch((error) => {
       if (error.code === 'auth/user-not-found') {
@@ -101,14 +108,20 @@ function loginUser() {
           .then(() => {
             currentUser = name;
             startDesktop();
-            console.log('Registro y login exitoso:', currentUser);
           })
           .catch(() => showWelcomeToast('Error al registrar'));
       } else {
         showWelcomeToast('Error: ' + error.message);
-        console.log('Error en login:', error.message);
       }
     });
+}
+
+function confirmLogout(confirm) {
+  const popup = document.getElementById('popup');
+  if (confirm) {
+    logout();
+  }
+  popup.style.display = 'none';
 }
 
 function logout() {
@@ -117,10 +130,9 @@ function logout() {
     document.getElementById('desktop').style.display = 'none';
     document.getElementById('welcomeScreen').style.display = 'flex';
     document.getElementById('taskbar').innerHTML = '';
-    console.log('Cierre de sesión exitoso');
+    showWelcomeToast('Sesión cerrada');
   }).catch((error) => {
     showWelcomeToast('Error al cerrar sesión: ' + error.message);
-    console.log('Error en logout:', error.message);
   });
 }
 
@@ -129,7 +141,6 @@ function startDesktop() {
   document.getElementById('desktop').style.display = 'block';
   initTaskbar();
   startClock();
-  console.log('Desktop iniciado para:', currentUser);
 }
 
 function initTaskbar() {
@@ -138,12 +149,17 @@ function initTaskbar() {
 
   const userInfo = document.createElement('div');
   userInfo.id = 'userInfo';
-  userInfo.innerHTML = `<span>${currentUser}</span><button onclick="logout()">Cerrar sesión</button>`;
+  userInfo.innerHTML = `<span>${currentUser}</span><button onclick="showPopup()">Cerrar sesión</button>`;
   taskbar.appendChild(userInfo);
 
   const clock = document.createElement('div');
   clock.id = 'clock';
   taskbar.appendChild(clock);
+}
+
+function showPopup() {
+  const popup = document.getElementById('popup');
+  popup.style.display = 'block';
 }
 
 function startClock() {
