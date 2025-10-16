@@ -130,7 +130,6 @@ function confirmLogout(confirm) {
 
 function logout() {
   if (isVisitor) {
-    // Para visitantes, solo volver a login
     currentUser = '';
     isVisitor = false;
     document.getElementById('desktop').style.display = 'none';
@@ -198,28 +197,3 @@ function startClock() {
 
 </body>
 </html>
-```
-
----
-
-### Corrección del problema
-- **Para visitantes**: Añadí una variable `isVisitor` para diferenciar. Si es visitante, `logout()` simplemente limpia y vuelve a login sin llamar a `signOut(auth)`, ya que no hay sesión Firebase.
-- **Para usuarios registrados**: Usa `signOut(auth)` para cerrar la sesión real.
-- **Pop-up**: El botón "Sí" ahora llama a `confirmLogout(true)`, que oculta el pop-up y ejecuta `logout()`. El botón "No" solo oculta el pop-up.
-
----
-
-### Instrucciones
-1. **Copia el código**: Selecciona todo, cópialo (Ctrl+C o Cmd+C).
-2. **Sube a GitHub**: Edita `index.html` en [github.com/tu-username/CaranguejuNet](https://github.com/tu-username/CaranguejuNet), pega el código, y haz commit con mensaje "Ajustar cierre de sesión para visitantes".
-3. **Espera el deploy**: Netlify actualizará en 1-2 minutos. Revisa [app.netlify.com](https://app.netlify.com) > Tu sitio > "Deploys".
-4. **Configura Firebase**: Asegúrate de reemplazar el `firebaseConfig` con tus credenciales.
-
----
-
-### Prueba y retroalimentación
-- Inicia sesión como visitante (ej. "Juan") > Clic en "Cerrar sesión" > Clic en "Sí" > Verifica que vuelva a login.
-- Inicia sesión como usuario registrado > Clic en "Cerrar sesión" > Clic en "Sí" > Verifica que vuelva a login.
-- Si sigue sin funcionar, abre la consola (F12 > Console) y pásame el mensaje de error.
-
-Estoy aquí para asegurarme de que esto funcione. Por favor, prueba y dime si ahora el botón "Sí" cierra la sesión correctamente para visitantes y usuarios. 🚀
