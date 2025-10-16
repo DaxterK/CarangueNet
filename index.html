@@ -27,10 +27,6 @@
       #popup { width:80%; }
     }
   </style>
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
-  </script>
 </head>
 <body>
 
@@ -61,138 +57,147 @@
   </div>
 </div>
 
-<script>
-let currentUser = '';
-let isVisitor = false;
+<script type="module">
+  // Importaciones de Firebase
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 
-const firebaseConfig = {
-  // Reemplaza con tu config de Firebase
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_PROJECT.firebaseapp.com",
-  projectId: "TU_PROJECT",
-  storageBucket: "TU_PROJECT.appspot.com",
-  messagingSenderId: "TU_SENDER_ID",
-  appId: "TU_APP_ID"
-};
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+  let currentUser = '';
+  let isVisitor = false;
 
-function showWelcomeToast(msg) {
-  const container = document.getElementById('welcomeToast');
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.textContent = msg;
-  container.appendChild(toast);
-  setTimeout(() => toast.remove(), 2000);
-}
+  const firebaseConfig = {
+    // Reemplaza con tu config de Firebase
+    apiKey: "TU_API_KEY",
+    authDomain: "TU_PROJECT.firebaseapp.com",
+    projectId: "TU_PROJECT",
+    storageBucket: "TU_PROJECT.appspot.com",
+    messagingSenderId: "TU_SENDER_ID",
+    appId: "TU_APP_ID"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
 
-function enterAsVisitor() {
-  const name = document.getElementById('visitorName').value.trim();
-  if (!name) { showWelcomeToast('Ingresa un nombre'); return; }
-  currentUser = name + ' (Visitante)';
-  isVisitor = true;
-  startDesktop();
-}
-
-function loginUser() {
-  const name = document.getElementById('userName').value.trim();
-  const pass = document.getElementById('userPass').value.trim();
-  if (!name || !pass) { showWelcomeToast('Usuario y contraseña requeridos'); return; }
-  const email = name + '@carangueju.fake';
-  signInWithEmailAndPassword(auth, email, pass)
-    .then((userCredential) => {
-      currentUser = name;
-      isVisitor = false;
-      startDesktop();
-    })
-    .catch((error) => {
-      if (error.code === 'auth/user-not-found') {
-        createUserWithEmailAndPassword(auth, email, pass)
-          .then(() => {
-            currentUser = name;
-            isVisitor = false;
-            startDesktop();
-          })
-          .catch(() => showWelcomeToast('Error al registrar'));
-      } else {
-        showWelcomeToast('Error: ' + error.message);
-      }
-    });
-}
-
-function confirmLogout(confirm) {
-  const popup = document.getElementById('popup');
-  popup.style.display = 'none';
-  if (confirm) {
-    logout();
+  function showWelcomeToast(msg) {
+    const container = document.getElementById('welcomeToast');
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
   }
-}
 
-function logout() {
-  if (isVisitor) {
-    currentUser = '';
-    isVisitor = false;
-    document.getElementById('desktop').style.display = 'none';
-    document.getElementById('welcomeScreen').style.display = 'flex';
-    document.getElementById('taskbar').innerHTML = '';
-    showWelcomeToast('Sesión cerrada');
-  } else {
-    signOut(auth).then(() => {
+  function enterAsVisitor() {
+    const name = document.getElementById('visitorName').value.trim();
+    if (!name) { showWelcomeToast('Ingresa un nombre'); return; }
+    currentUser = name + ' (Visitante)';
+    isVisitor = true;
+    startDesktop();
+  }
+
+  function loginUser() {
+    const name = document.getElementById('userName').value.trim();
+    const pass = document.getElementById('userPass').value.trim();
+    if (!name || !pass) { showWelcomeToast('Usuario y contraseña requeridos'); return; }
+    const email = name + '@carangueju.fake';
+    signInWithEmailAndPassword(auth, email, pass)
+      .then((userCredential) => {
+        currentUser = name;
+        isVisitor = false;
+        startDesktop();
+      })
+      .catch((error) => {
+        if (error.code === 'auth/user-not-found') {
+          createUserWithEmailAndPassword(auth, email, pass)
+            .then((userCredential) => {
+              currentUser = name;
+              isVisitor = false;
+              startDesktop();
+            })
+            .catch((error) => {
+              showWelcomeToast('Error al registrar: ' + error.message);
+              console.error('Registro falló:', error);
+            });
+        } else {
+          showWelcomeToast('Error al iniciar sesión: ' + error.message);
+          console.error('Login falló:', error);
+        }
+      });
+  }
+
+  function confirmLogout(confirm) {
+    const popup = document.getElementById('popup');
+    popup.style.display = 'none';
+    if (confirm) {
+      logout();
+    }
+  }
+
+  function logout() {
+    if (isVisitor) {
       currentUser = '';
       isVisitor = false;
       document.getElementById('desktop').style.display = 'none';
       document.getElementById('welcomeScreen').style.display = 'flex';
       document.getElementById('taskbar').innerHTML = '';
       showWelcomeToast('Sesión cerrada');
-    }).catch((error) => {
-      showWelcomeToast('Error al cerrar sesión: ' + error.message);
-    });
-  }
-}
-
-function startDesktop() {
-  document.getElementById('welcomeScreen').style.display = 'none';
-  document.getElementById('desktop').style.display = 'block';
-  initTaskbar();
-  startClock();
-}
-
-function initTaskbar() {
-  const taskbar = document.getElementById('taskbar');
-  taskbar.innerHTML = '';
-
-  const userInfo = document.createElement('div');
-  userInfo.id = 'userInfo';
-  userInfo.innerHTML = `<span>${currentUser}</span><button onclick="showPopup()">Cerrar sesión</button>`;
-  taskbar.appendChild(userInfo);
-
-  const clock = document.createElement('div');
-  clock.id = 'clock';
-  taskbar.appendChild(clock);
-}
-
-function showPopup() {
-  const popup = document.getElementById('popup');
-  popup.style.display = 'block';
-}
-
-function startClock() {
-  function updateClock() {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    const date = String(now.getDate()).padStart(2, '0');
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const year = now.getFullYear();
-    const clock = document.getElementById('clock');
-    if (clock) {
-      clock.textContent = `${hours}:${minutes}:${seconds} ${date}/${month}/${year}`;
+    } else {
+      signOut(auth).then(() => {
+        currentUser = '';
+        isVisitor = false;
+        document.getElementById('desktop').style.display = 'none';
+        document.getElementById('welcomeScreen').style.display = 'flex';
+        document.getElementById('taskbar').innerHTML = '';
+        showWelcomeToast('Sesión cerrada');
+      }).catch((error) => {
+        showWelcomeToast('Error al cerrar sesión: ' + error.message);
+        console.error('Logout falló:', error);
+      });
     }
   }
-  updateClock();
-  setInterval(updateClock, 1000);
-}
+
+  function startDesktop() {
+    document.getElementById('welcomeScreen').style.display = 'none';
+    document.getElementById('desktop').style.display = 'block';
+    initTaskbar();
+    startClock();
+  }
+
+  function initTaskbar() {
+    const taskbar = document.getElementById('taskbar');
+    taskbar.innerHTML = '';
+
+    const userInfo = document.createElement('div');
+    userInfo.id = 'userInfo';
+    userInfo.innerHTML = `<span>${currentUser}</span><button onclick="showPopup()">Cerrar sesión</button>`;
+    taskbar.appendChild(userInfo);
+
+    const clock = document.createElement('div');
+    clock.id = 'clock';
+    taskbar.appendChild(clock);
+  }
+
+  function showPopup() {
+    const popup = document.getElementById('popup');
+    popup.style.display = 'block';
+  }
+
+  function startClock() {
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const date = String(now.getDate()).padStart(2, '0');
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = now.getFullYear();
+      const clock = document.getElementById('clock');
+      if (clock) {
+        clock.textContent = `${hours}:${minutes}:${seconds} ${date}/${month}/${year}`;
+      }
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+  }
 </script>
 
 </body>
