@@ -35,14 +35,12 @@
   <h1>Bienvenido a FakeNet Carangueju</h1>
   <div>
     <h3>Visitante</h3>
-    <input type="text" id="visitorName" placeholder="Nombre visitante">
     <button onclick="enterAsVisitor()">Entrar como visitante</button>
   </div>
   <div>
-    <h3>Usuario registrado</h3>
-    <input type="text" id="userName" placeholder="Usuario">
-    <input type="password" id="userPass" placeholder="Contraseña">
-    <button onclick="loginUser()">Entrar / Registrar</button>
+    <h3>Usuario</h3>
+    <input type="text" id="userName" placeholder="Elige tu nombre">
+    <button onclick="enterAsUser()">Entrar como usuario</button>
   </div>
   <div id="welcomeToast"></div>
 </div>
@@ -57,32 +55,7 @@
   </div>
 </div>
 
-<script type="module">
-  // Intentar importar Firebase con manejo de errores
-  let firebaseApp, auth;
-  try {
-    import('https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js').then((firebase) => {
-      firebaseApp = firebase.initializeApp({
-        apiKey: "TU_API_KEY",
-        authDomain: "TU_PROJECT.firebaseapp.com",
-        projectId: "TU_PROJECT",
-        storageBucket: "TU_PROJECT.appspot.com",
-        messagingSenderId: "TU_SENDER_ID",
-        appId: "TU_APP_ID"
-      });
-      return import('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js');
-    }).then((firebaseAuth) => {
-      auth = firebaseAuth.getAuth(firebaseApp);
-      console.log('Firebase initialized successfully');
-    }).catch((error) => {
-      console.error('Error initializing Firebase:', error);
-      alert('Error al cargar Firebase. Verifica tu conexión o configura firebaseConfig.');
-    });
-  } catch (e) {
-    console.error('Import error:', e);
-    alert('Error al importar Firebase. Asegúrate de usar un servidor web.');
-  }
-
+<script>
   let currentUser = '';
   let isVisitor = false;
 
@@ -96,45 +69,20 @@
   }
 
   function enterAsVisitor() {
-    const name = document.getElementById('visitorName').value.trim();
-    if (!name) { showWelcomeToast('Ingresa un nombre'); return; }
-    currentUser = name + ' (Visitante)';
+    const randomNum = Math.floor(Math.random() * 900) + 100; // Número aleatorio de 3 cifras
+    currentUser = `Visitante${randomNum}`;
     isVisitor = true;
     startDesktop();
+    showWelcomeToast(`Bienvenido, ${currentUser}!`);
   }
 
-  function loginUser() {
-    if (!auth) {
-      showWelcomeToast('Firebase no está inicializado. Revisa la consola.');
-      return;
-    }
+  function enterAsUser() {
     const name = document.getElementById('userName').value.trim();
-    const pass = document.getElementById('userPass').value.trim();
-    if (!name || !pass) { showWelcomeToast('Usuario y contraseña requeridos'); return; }
-    const email = name + '@carangueju.fake';
-    signInWithEmailAndPassword(auth, email, pass)
-      .then((userCredential) => {
-        currentUser = name;
-        isVisitor = false;
-        startDesktop();
-      })
-      .catch((error) => {
-        if (error.code === 'auth/user-not-found') {
-          createUserWithEmailAndPassword(auth, email, pass)
-            .then((userCredential) => {
-              currentUser = name;
-              isVisitor = false;
-              startDesktop();
-            })
-            .catch((error) => {
-              showWelcomeToast('Error al registrar: ' + error.message);
-              console.error('Registro falló:', error);
-            });
-        } else {
-          showWelcomeToast('Error al iniciar sesión: ' + error.message);
-          console.error('Login falló:', error);
-        }
-      });
+    if (!name) { showWelcomeToast('Elige un nombre'); return; }
+    currentUser = name;
+    isVisitor = false;
+    startDesktop();
+    showWelcomeToast(`Bienvenido, ${currentUser}!`);
   }
 
   function confirmLogout(confirm) {
@@ -146,30 +94,12 @@
   }
 
   function logout() {
-    if (!auth) {
-      showWelcomeToast('Firebase no está inicializado.');
-      return;
-    }
-    if (isVisitor) {
-      currentUser = '';
-      isVisitor = false;
-      document.getElementById('desktop').style.display = 'none';
-      document.getElementById('welcomeScreen').style.display = 'flex';
-      document.getElementById('taskbar').innerHTML = '';
-      showWelcomeToast('Sesión cerrada');
-    } else {
-      signOut(auth).then(() => {
-        currentUser = '';
-        isVisitor = false;
-        document.getElementById('desktop').style.display = 'none';
-        document.getElementById('welcomeScreen').style.display = 'flex';
-        document.getElementById('taskbar').innerHTML = '';
-        showWelcomeToast('Sesión cerrada');
-      }).catch((error) => {
-        showWelcomeToast('Error al cerrar sesión: ' + error.message);
-        console.error('Logout falló:', error);
-      });
-    }
+    currentUser = '';
+    isVisitor = false;
+    document.getElementById('desktop').style.display = 'none';
+    document.getElementById('welcomeScreen').style.display = 'flex';
+    document.getElementById('taskbar').innerHTML = '';
+    showWelcomeToast('Sesión cerrada');
   }
 
   function startDesktop() {
@@ -188,7 +118,7 @@
     userInfo.innerHTML = `<span>${currentUser}</span><button onclick="showPopup()">Cerrar sesión</button>`;
     taskbar.appendChild(userInfo);
 
-    const clock = document.getElementById('clock');
+    const clock = document.createElement('div');
     clock.id = 'clock';
     taskbar.appendChild(clock);
   }
