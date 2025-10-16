@@ -5,14 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FakeNet Carangueju</title>
   <style>
-    body, html { margin:0; padding:0; font-family:'MS Sans Serif', sans-serif; background:#a0d8d0; overflow-x:hidden; }
-    #welcomeScreen { width:100vw; height:100vh; background:#f0f0f0; display:flex; justify-content:center; align-items:center; flex-direction:column; }
+    body, html { margin:0; padding:0; font-family:'MS Sans Serif', sans-serif; background:#a0d8d0; overflow-x:hidden; height:100%; }
+    #welcomeScreen { width:100%; height:100%; background:#f0f0f0; display:flex; justify-content:center; align-items:center; flex-direction:column; }
     #welcomeScreen input, #welcomeScreen button { margin:5px; padding:10px; font-size:16px; }
-    #desktop { width:100vw; height:100vh; position:relative; display:none; overflow-y:auto; }
-    #taskbar { position:absolute; bottom:0; left:0; width:100%; height:30px; background:#666; display:flex; align-items:center; padding:0 10px; }
-    #userInfo { display:flex; align-items:center; color:#fff; margin-right:auto; }
-    #userInfo button { margin-left:10px; padding:5px 10px; background:#aaa; border:none; cursor:pointer; border-radius:3px; }
+    #desktop { width:100%; height:100%; position:relative; display:none; overflow-y:auto; }
+    #taskbar { position:absolute; bottom:0; left:0; width:100%; height:30px; background:#666; display:flex; align-items:center; padding:0 10px; z-index:1000; }
+    #userInfo { display:flex; align-items:center; color:#fff; }
+    #userInfo span { margin-right:10px; }
+    #userInfo button { padding:5px 10px; background:#aaa; border:none; cursor:pointer; border-radius:3px; }
     #clock { color:#fff; font-family:'Courier New', monospace; font-size:12px; margin-left:auto; }
+    .toast { background:#f0d888; padding:5px; margin:5px 0; border:1px solid #ccc; border-radius:3px; font-size:12px; color:#000; animation: fadeout 2s forwards; }
+    @keyframes fadeout { 0%{opacity:1;} 90%{opacity:1;} 100%{opacity:0;} }
     @media (max-width: 480px) {
       #welcomeScreen { padding:10px; }
       #welcomeScreen input, #welcomeScreen button { width:100%; box-sizing:border-box; }
@@ -22,7 +25,7 @@
   </style>
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
   </script>
 </head>
 <body>
@@ -45,7 +48,9 @@
 </div>
 
 <!-- Escritorio -->
-<div id="desktop"></div>
+<div id="desktop">
+  <div id="taskbar"></div>
+</div>
 
 <script>
 let currentUser = '';
@@ -76,6 +81,7 @@ function enterAsVisitor() {
   if (!name) { showWelcomeToast('Ingresa un nombre'); return; }
   currentUser = name + ' (Visitante)';
   startDesktop();
+  console.log('Entrando como visitante:', currentUser);
 }
 
 function loginUser() {
@@ -87,6 +93,7 @@ function loginUser() {
     .then((userCredential) => {
       currentUser = name;
       startDesktop();
+      console.log('Inicio de sesión exitoso:', currentUser);
     })
     .catch((error) => {
       if (error.code === 'auth/user-not-found') {
@@ -94,10 +101,12 @@ function loginUser() {
           .then(() => {
             currentUser = name;
             startDesktop();
+            console.log('Registro y login exitoso:', currentUser);
           })
           .catch(() => showWelcomeToast('Error al registrar'));
       } else {
         showWelcomeToast('Error: ' + error.message);
+        console.log('Error en login:', error.message);
       }
     });
 }
@@ -108,8 +117,10 @@ function logout() {
     document.getElementById('desktop').style.display = 'none';
     document.getElementById('welcomeScreen').style.display = 'flex';
     document.getElementById('taskbar').innerHTML = '';
+    console.log('Cierre de sesión exitoso');
   }).catch((error) => {
     showWelcomeToast('Error al cerrar sesión: ' + error.message);
+    console.log('Error en logout:', error.message);
   });
 }
 
@@ -118,6 +129,7 @@ function startDesktop() {
   document.getElementById('desktop').style.display = 'block';
   initTaskbar();
   startClock();
+  console.log('Desktop iniciado para:', currentUser);
 }
 
 function initTaskbar() {
