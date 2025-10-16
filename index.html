@@ -124,17 +124,29 @@ function confirmLogout(confirm) {
   popup.style.display = 'none';
 }
 
+// --- CAMBIO PRINCIPAL ---
 function logout() {
-  signOut(auth).then(() => {
-    currentUser = '';
-    document.getElementById('desktop').style.display = 'none';
-    document.getElementById('welcomeScreen').style.display = 'flex';
-    document.getElementById('taskbar').innerHTML = '';
-    showWelcomeToast('Sesión cerrada');
-  }).catch((error) => {
-    showWelcomeToast('Error al cerrar sesión: ' + error.message);
-  });
+  if (auth.currentUser) {
+    // Usuario de Firebase
+    signOut(auth).then(() => {
+      endSession();
+    }).catch((error) => {
+      showWelcomeToast('Error al cerrar sesión: ' + error.message);
+    });
+  } else {
+    // Visitante o sin usuario
+    endSession();
+  }
 }
+
+function endSession() {
+  currentUser = '';
+  document.getElementById('desktop').style.display = 'none';
+  document.getElementById('welcomeScreen').style.display = 'flex';
+  document.getElementById('taskbar').innerHTML = '';
+  showWelcomeToast('Sesión cerrada');
+}
+// --- FIN CAMBIO PRINCIPAL ---
 
 function startDesktop() {
   document.getElementById('welcomeScreen').style.display = 'none';
