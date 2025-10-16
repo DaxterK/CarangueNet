@@ -58,24 +58,33 @@
 </div>
 
 <script type="module">
-  // Importaciones de Firebase
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+  // Intentar importar Firebase con manejo de errores
+  let firebaseApp, auth;
+  try {
+    import('https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js').then((firebase) => {
+      firebaseApp = firebase.initializeApp({
+        apiKey: "TU_API_KEY",
+        authDomain: "TU_PROJECT.firebaseapp.com",
+        projectId: "TU_PROJECT",
+        storageBucket: "TU_PROJECT.appspot.com",
+        messagingSenderId: "TU_SENDER_ID",
+        appId: "TU_APP_ID"
+      });
+      return import('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js');
+    }).then((firebaseAuth) => {
+      auth = firebaseAuth.getAuth(firebaseApp);
+      console.log('Firebase initialized successfully');
+    }).catch((error) => {
+      console.error('Error initializing Firebase:', error);
+      alert('Error al cargar Firebase. Verifica tu conexión o configura firebaseConfig.');
+    });
+  } catch (e) {
+    console.error('Import error:', e);
+    alert('Error al importar Firebase. Asegúrate de usar un servidor web.');
+  }
 
   let currentUser = '';
   let isVisitor = false;
-
-  const firebaseConfig = {
-    // Reemplaza con tu config de Firebase
-    apiKey: "TU_API_KEY",
-    authDomain: "TU_PROJECT.firebaseapp.com",
-    projectId: "TU_PROJECT",
-    storageBucket: "TU_PROJECT.appspot.com",
-    messagingSenderId: "TU_SENDER_ID",
-    appId: "TU_APP_ID"
-  };
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
 
   function showWelcomeToast(msg) {
     const container = document.getElementById('welcomeToast');
@@ -95,6 +104,10 @@
   }
 
   function loginUser() {
+    if (!auth) {
+      showWelcomeToast('Firebase no está inicializado. Revisa la consola.');
+      return;
+    }
     const name = document.getElementById('userName').value.trim();
     const pass = document.getElementById('userPass').value.trim();
     if (!name || !pass) { showWelcomeToast('Usuario y contraseña requeridos'); return; }
@@ -133,6 +146,10 @@
   }
 
   function logout() {
+    if (!auth) {
+      showWelcomeToast('Firebase no está inicializado.');
+      return;
+    }
     if (isVisitor) {
       currentUser = '';
       isVisitor = false;
@@ -171,7 +188,7 @@
     userInfo.innerHTML = `<span>${currentUser}</span><button onclick="showPopup()">Cerrar sesión</button>`;
     taskbar.appendChild(userInfo);
 
-    const clock = document.createElement('div');
+    const clock = document.getElementById('clock');
     clock.id = 'clock';
     taskbar.appendChild(clock);
   }
